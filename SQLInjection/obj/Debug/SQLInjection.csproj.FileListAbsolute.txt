@@ -1,0 +1,5 @@
+d:\我的配置\my documents\visual studio 2010\Projects\SQLInjection\SQLInjection\obj\Debug\ResolveAssemblyReference.cache
+d:\我的配置\my documents\visual studio 2010\Projects\SQLInjection\SQLInjection\bin\Debug\SQLInjection.dll
+d:\我的配置\my documents\visual studio 2010\Projects\SQLInjection\SQLInjection\bin\Debug\SQLInjection.pdb
+d:\我的配置\my documents\visual studio 2010\Projects\SQLInjection\SQLInjection\obj\Debug\SQLInjection.dll
+d:\我的配置\my documents\visual studio 2010\Projects\SQLInjection\SQLInjection\obj\Debug\SQLInjection.pdb
