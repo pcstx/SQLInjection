@@ -19,6 +19,8 @@ namespace SQLInjection
 
             string keywords = "";
             bool enable =true;
+            int level = 0;
+
             try
             {
                 if (ConfigurationManager.AppSettings.Count > 0)
@@ -32,18 +34,26 @@ namespace SQLInjection
                         }
                     }
 
+                    level = ConvertToInt(ConfigurationManager.AppSettings["SQLInjectionLevel"]); //过滤等级
                     keywords = ConfigurationManager.AppSettings["SQLInjection"]; //追加的过滤关键词
                 }
 
                 if (enable)
                 {
-                    CheckSQL.Check(application, keywords);
+                    CheckSQL.Check(application, keywords,level);
                 }
             }
             catch
             { 
             
             } 
+        }
+
+        private static int ConvertToInt(string obj)
+        {
+            int result = 0;
+            int.TryParse(obj, out result);
+            return result;
         }
 
         public void Dispose()
