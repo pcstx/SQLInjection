@@ -16,33 +16,34 @@ namespace SQLInjection
         void application_BeginRequest(object sender, EventArgs e)
         {
             HttpApplication application = (HttpApplication)sender;
-
-            string keywords = "";
-            bool enable =true;
-            int level = 0;
-            int SQLInjectionType = 0;
-
+             
             try
             {
+                SQLInjectionParam param = new SQLInjectionParam();
                 if (ConfigurationManager.AppSettings.Count > 0)
-                {
+                { 
                     string enableStr = ConfigurationManager.AppSettings["SQLInjectionEnable"]; //是否启用
                     if (enableStr!= null)
                     {
                         if (enableStr.ToLower() == "false" || enableStr.ToLower() == "0")
                         {
-                            enable = false;
+                            param.SQLInjectionEnable = false;
                         }
                     }
 
-                    level = ConvertToInt(ConfigurationManager.AppSettings["SQLInjectionLevel"]); //过滤等级
-                    keywords = ConfigurationManager.AppSettings["SQLInjection"]; //追加的过滤关键词
-                    SQLInjectionType = ConvertToInt(ConfigurationManager.AppSettings["SQLInjectionType"]); //过滤方法
+                    param.SQLInjectionLevel = ConvertToInt(ConfigurationManager.AppSettings["SQLInjectionLevel"]); //过滤等级
+                    param.SQLInjection = ConfigurationManager.AppSettings["SQLInjection"]; //追加的过滤关键词
+                    param.SQLInjectionType = ConvertToInt(ConfigurationManager.AppSettings["SQLInjectionType"]); //过滤方法
+                    string logFileName = ConfigurationManager.AppSettings["SQLInjectionLogFile"]; //日志记录文件
+                    if (!string.IsNullOrEmpty(logFileName))
+                    {
+                        param.SQLInjectionLogFile = logFileName;
+                    }
                 }
 
-                if (enable)
-                {
-                    CheckSQL.Check(application, keywords,level,SQLInjectionType);
+                if (param.SQLInjectionEnable)
+                { 
+                    CheckSQL.Check(application,param);
                 }
             }
             catch(Exception ex)
@@ -64,5 +65,5 @@ namespace SQLInjection
         }
 
 
-    }
+    } 
 }

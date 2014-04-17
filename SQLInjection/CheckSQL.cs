@@ -11,7 +11,7 @@ namespace SQLInjection
     public class CheckSQL
     {
 
-        public static void Check(HttpApplication application, string keywords, int level, int SQLInjectionType)
+        public static void Check(HttpApplication application, SQLInjectionParam param )
         {
             HttpContext context = application.Context;
             HttpRequest request = context.Request;
@@ -20,32 +20,25 @@ namespace SQLInjection
            
             string file = "";
 
-            if (!string.IsNullOrEmpty(keywords))
+            if (!string.IsNullOrEmpty(param.SQLInjection))
             {
-                if(keywords.StartsWith("↓"))
+                if (param.SQLInjection.StartsWith("↓"))
                 {
-                    sqlkeywords += keywords;
+                    sqlkeywords += param.SQLInjection;
                 }
                 else
                 {
-                    sqlkeywords += "↓" + keywords;
+                    sqlkeywords += "↓" + param.SQLInjection;
                 }
             }
 
             #region 记录日志文件
 
-            if (SQLInjectionType % 2 == 1) //记录到日志
+            if (param.SQLInjectionType % 2 == 1) //记录到日志
             {
                 try
-                {
-                    string fileName = @"Log/log" + DateTime.Today.ToShortDateString() + @".txt";
-                    string logFileName = ConfigurationManager.AppSettings["SQLInjectionLogFile"]; //日志记录文件
-                    if (!string.IsNullOrEmpty(logFileName))
-                    {
-                        fileName = logFileName;
-                    }
-
-                    file = context.Server.MapPath(fileName);
+                { 
+                    file = context.Server.MapPath(param.SQLInjectionLogFile);
                     FileInfo fi = new FileInfo(file);
                     if (!fi.Exists)
                     {
@@ -71,7 +64,7 @@ namespace SQLInjection
                     {
                         string getsqlkey = request.Form.Keys[k];
                         string formValue= request.Form[getsqlkey].ToLower();
-                        string getip = Find(request, keyword, getsqlkey, formValue, (int)CheckItem.form, level, SQLInjectionType, file);
+                        string getip = Find(request, keyword, getsqlkey, formValue, (int)CheckItem.form, param.SQLInjectionLevel, param.SQLInjectionType,  file);
                     }
                 }
                 // -----------------------防 GET 注入-----------------------
@@ -81,7 +74,7 @@ namespace SQLInjection
                     {
                         string getsqlkey = request.QueryString.Keys[k];
                         string queryValue=request.QueryString[getsqlkey].ToLower();
-                        string getip = Find(request, keyword, getsqlkey, queryValue, (int)CheckItem.query, level, SQLInjectionType, file);
+                        string getip = Find(request, keyword, getsqlkey, queryValue, (int)CheckItem.query, param.SQLInjectionLevel, param.SQLInjectionType, file);
                     }
                 }
                 // -----------------------防 Cookies 注入-----------------------
@@ -91,7 +84,7 @@ namespace SQLInjection
                     {
                         string getsqlkey = request.Cookies.Keys[k];
                         string cookieValue=request.Cookies[getsqlkey].Value.ToLower();
-                        string getip = Find(request, keyword, getsqlkey, cookieValue, (int)CheckItem.cookie, level, SQLInjectionType,file);
+                        string getip = Find(request, keyword, getsqlkey, cookieValue, (int)CheckItem.cookie, param.SQLInjectionLevel, param.SQLInjectionType, file);
                     }
                 }
             }
