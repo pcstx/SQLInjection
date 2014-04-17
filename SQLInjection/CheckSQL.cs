@@ -3,19 +3,23 @@ using System.Collections.Generic;
 using System.Text;
 using System.Web;
 using System.Text.RegularExpressions;
+using System.Configuration;
+using System.IO;
 
 namespace SQLInjection
 {
     public class CheckSQL
     {
-       
-        public static void Check(HttpApplication application,string keywords,int level)
+
+        public static void Check(HttpApplication application, string keywords, int level, int SQLInjectionType)
         {
             HttpContext context = application.Context;
             HttpRequest request = context.Request;
 
-            string sqlkeywords = "exec↓select↓drop↓alter↓exists↓union↓and↓or↓xor↓order↓mid↓asc↓execute↓xp_cmdshell↓insert↓update↓delete↓join↓declare↓char↓sp_oacreate↓wscript.shell↓xp_regwrite↓'↓;↓--";
- 
+            string sqlkeywords = "select↓insert↓update↓delete↓drop↓create↓truncate↓join↓declare↓exists↓union↓and↓or↓xor↓order↓exec↓execute↓asc↓alter↓mid↓xp_cmdshell↓char↓sp_oacreate↓wscript.shell↓xp_regwrite";
+           
+            string file = "";
+
             if (!string.IsNullOrEmpty(keywords))
             {
                 if(keywords.StartsWith("↓"))
@@ -25,8 +29,35 @@ namespace SQLInjection
                 else
                 {
                     sqlkeywords += "↓" + keywords;
-                } 
+                }
             }
+
+            #region 记录日志文件
+
+            if (SQLInjectionType % 2 == 1) //记录到日志
+            {
+                try
+                {
+                    string fileName = @"Log/log" + DateTime.Today.ToShortDateString() + @".txt";
+                    string logFileName = ConfigurationManager.AppSettings["SQLInjectionLogFile"]; //日志记录文件
+                    if (!string.IsNullOrEmpty(logFileName))
+                    {
+                        fileName = logFileName;
+                    }
+
+                    file = context.Server.MapPath(fileName);
+                    FileInfo fi = new FileInfo(file);
+                    if (!fi.Exists)
+                    {
+                        Directory.CreateDirectory(fi.DirectoryName);
+                    }
+                }
+                catch
+                { 
+                }
+            }
+            #endregion
+
 
             //Stopwatch watch = new Stopwatch();
             //watch.Start();
@@ -40,7 +71,7 @@ namespace SQLInjection
                     {
                         string getsqlkey = request.Form.Keys[k];
                         string formValue= request.Form[getsqlkey].ToLower();
-                        string getip = Find(request, keyword,getsqlkey, formValue, (int)CheckItem.form,level);
+                        string getip = Find(request, keyword, getsqlkey, formValue, (int)CheckItem.form, level, SQLInjectionType, file);
                     }
                 }
                 // -----------------------防 GET 注入-----------------------
@@ -50,7 +81,7 @@ namespace SQLInjection
                     {
                         string getsqlkey = request.QueryString.Keys[k];
                         string queryValue=request.QueryString[getsqlkey].ToLower();
-                        string getip = Find(request, keyword, getsqlkey, queryValue, (int)CheckItem.query,level);
+                        string getip = Find(request, keyword, getsqlkey, queryValue, (int)CheckItem.query, level, SQLInjectionType, file);
                     }
                 }
                 // -----------------------防 Cookies 注入-----------------------
@@ -60,7 +91,7 @@ namespace SQLInjection
                     {
                         string getsqlkey = request.Cookies.Keys[k];
                         string cookieValue=request.Cookies[getsqlkey].Value.ToLower();
-                        string getip = Find(request, keyword,getsqlkey, cookieValue, (int)CheckItem.cookie,level);
+                        string getip = Find(request, keyword, getsqlkey, cookieValue, (int)CheckItem.cookie, level, SQLInjectionType,file);
                     }
                 }
             }
@@ -73,7 +104,7 @@ namespace SQLInjection
             //System.Web.HttpContext.Current.Response.End();
         }
 
-        private static string Find(HttpRequest request, string keyword,string key, string value,int type,int level)
+        private static string Find(HttpRequest request, string keyword, string key, string value, int type, int level, int SQLInjectionType,string fileName)
         {
             string optionType = "";
             switch (type)
@@ -94,10 +125,13 @@ namespace SQLInjection
             string[] values = requestvalues.Split(' ');
             for (int i = 0; i < values.Length; i++)
             {                
-                if (((level==1)&&Regex.Matches(values[i], keyword).Count > 0)||(level==0&&values[i]==keyword))
+                if (level==0||((level==1)&&Regex.Matches(values[i], keyword).Count > 0)||(level==2&&values[i]==keyword))
                 {
-                    HttpContext.Current.Response.Write("<script Language=JavaScript>alert('防注入程序提示您，请勿提交非法字符！');</" + "script>");
-                    HttpContext.Current.Response.Write("非法操作！您存在非法的sql注入" + "<br>");
+                    if (level == 0 && values[i] != keyword && ((Regex.Matches(values[i], keyword + " ").Count <= 0) || (Regex.Matches(values[i], " " + keyword).Count <= 0)))
+                    {
+                        continue;
+                    }
+
                     if (request.ServerVariables["HTTP_X_FORWARDED_FOR"] != null)
                     {
                         getip = request.ServerVariables["HTTP_X_FORWARDED_FOR"];
@@ -106,6 +140,47 @@ namespace SQLInjection
                     {
                         getip = request.ServerVariables["REMOTE_ADDR"];
                     }
+                     
+                    #region 记录到日志
+                    if (SQLInjectionType % 2 == 1) //记录到日志
+                    {
+                        try
+                        { 
+                            using (FileStream fs = new FileStream(fileName, FileMode.Append))
+                            {
+                                using (StreamWriter sw = new StreamWriter(fs, Encoding.Default))
+                                {
+                                    StringBuilder sb = new StringBuilder();
+                                    sb.Append("操作IP：" + getip + ";");
+                                    sb.Append("操作时间：" + DateTime.Now.ToString() + ";");
+                                    sb.Append("操作页面：" + request.ServerVariables["URL"] + ";");
+                                    sb.Append("提交方式：" + optionType + ";");
+                                    sb.Append("提交参数：" + key + ";");
+                                    sb.Append("提交数据：" + value + ";");
+
+                                    sw.WriteLine(sb.ToString());
+                                }
+
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+                    }
+                    #endregion
+
+                    #region 记录到数据库(未实现)
+                    if (SQLInjectionType ==2||SQLInjectionType==3||SQLInjectionType==6) //记录到数据库
+                    {
+                         //string sql = @" insert into Table values() ";
+                    }
+                    #endregion 
+
+                    #region 页面输出
+                    HttpContext.Current.Response.Write("<script Language=JavaScript>alert('防注入程序提示您，请勿提交非法字符！');</" + "script>");
+                    HttpContext.Current.Response.Write("非法操作！您存在非法的sql注入" + "<br>");
+                    
                     HttpContext.Current.Response.Write("操 作 I P ：" + getip + "<br>");
                     HttpContext.Current.Response.Write("操 作 时 间：" + DateTime.Now.ToString() + "<br>");
                     HttpContext.Current.Response.Write("操 作 页 面：" + request.ServerVariables["URL"] + "<br>");
@@ -113,12 +188,15 @@ namespace SQLInjection
                     HttpContext.Current.Response.Write("提 交 参 数：" + key + "<br>");
                     HttpContext.Current.Response.Write("提 交 数 据：" + value + "<br>");
                     HttpContext.Current.Response.End();
+                    #endregion  
               }
             }
+           
             return getip;
         }
+         
 
-        private enum CheckItem:int
+        private enum CheckItem : int
         { 
             form=1,
             query,

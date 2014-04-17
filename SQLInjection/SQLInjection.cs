@@ -20,6 +20,7 @@ namespace SQLInjection
             string keywords = "";
             bool enable =true;
             int level = 0;
+            int SQLInjectionType = 0;
 
             try
             {
@@ -36,14 +37,15 @@ namespace SQLInjection
 
                     level = ConvertToInt(ConfigurationManager.AppSettings["SQLInjectionLevel"]); //过滤等级
                     keywords = ConfigurationManager.AppSettings["SQLInjection"]; //追加的过滤关键词
+                    SQLInjectionType = ConvertToInt(ConfigurationManager.AppSettings["SQLInjectionType"]); //过滤方法
                 }
 
                 if (enable)
                 {
-                    CheckSQL.Check(application, keywords,level);
+                    CheckSQL.Check(application, keywords,level,SQLInjectionType);
                 }
             }
-            catch
+            catch(Exception ex)
             { 
             
             } 
