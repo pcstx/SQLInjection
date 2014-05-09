@@ -16,7 +16,7 @@ namespace SQLInjection
             HttpContext context = application.Context;
             HttpRequest request = context.Request;
 
-            string sqlkeywords = "select↓insert↓update↓delete↓drop↓create↓truncate↓join↓declare↓exists↓union↓and↓or↓xor↓order↓exec↓execute↓asc↓alter↓mid↓xp_cmdshell↓char↓sp_oacreate↓wscript.shell↓xp_regwrite";
+            string sqlkeywords = "select↓insert↓update↓delete↓drop↓create↓truncate↓join↓declare↓exists↓union↓and↓or↓xor↓order↓exec↓execute↓alter↓mid↓xp_cmdshell↓char↓sp_oacreate↓wscript.shell↓xp_regwrite";
            
             string file = "";
 
@@ -114,17 +114,15 @@ namespace SQLInjection
             }
 
             string getip = "";
-            string requestvalues = Regex.Replace(value, "\\s+", " ");
+            string requestvalues = Regex.Replace(value.Trim(), "\\s+", " ");
             string[] values = requestvalues.Split(' ');
             for (int i = 0; i < values.Length; i++)
             {                
-                if (level==0||((level==1)&&Regex.Matches(values[i], keyword).Count > 0)||(level==2&&values[i]==keyword))
-                {
-                    if (level == 0 && values[i] != keyword && ((Regex.Matches(values[i], keyword + " ").Count <= 0) || (Regex.Matches(values[i], " " + keyword).Count <= 0)))
-                    {
-                        continue;
-                    }
-
+                //level=0 匹配delete后面有空格的
+                //level=1 完全匹配
+                  
+                if ((level == 0 && values[i] == keyword && values.Length > 1) || (level == 1 && values[i] == keyword))
+                { 
                     if (request.ServerVariables["HTTP_X_FORWARDED_FOR"] != null)
                     {
                         getip = request.ServerVariables["HTTP_X_FORWARDED_FOR"];
