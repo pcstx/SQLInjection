@@ -16,7 +16,7 @@ namespace SQLInjection
             HttpContext context = application.Context;
             HttpRequest request = context.Request;
 
-            string sqlkeywords = "select↓insert↓update↓delete↓drop↓create↓truncate↓join↓declare↓exists↓union↓and↓or↓xor↓order↓exec↓execute↓alter↓mid↓xp_cmdshell↓char↓sp_oacreate↓wscript.shell↓xp_regwrite";
+            string sqlkeywords = "select↓insert↓update↓delete↓drop↓create↓truncate↓join↓declare↓exists↓union↓order↓exec↓execute↓alter↓mid↓xp_cmdshell↓char↓sp_oacreate↓wscript.shell↓xp_regwrite";
            
             string file = "";
 
@@ -169,14 +169,16 @@ namespace SQLInjection
                     #endregion 
 
                     #region 页面输出
-                    HttpContext.Current.Response.Write("<script Language=JavaScript>alert('防注入程序提示您，请勿提交非法字符！');</" + "script>");
-                    HttpContext.Current.Response.Write("非法操作！您存在非法的sql注入" + "<br>");
-                    
+                    HttpContext.Current.Response.Write("<script>alert('防注入程序提示您，"+keyword+" 为非法字符请删除后再提交！');</" + "script>");
+                    HttpContext.Current.Response.Write("您提交的数据中存在非法的字符，请删除后再提交" + "<br><br>");
+
+                    HttpContext.Current.Response.Write("非 法 字 符：<span style='color:#f60'>" + keyword + "</span><br>");
+                    HttpContext.Current.Response.Write("提 交 参 数：" + key + "<br>");
+                    HttpContext.Current.Response.Write("提 交 方 式：" + optionType + "<br>");
+                    HttpContext.Current.Response.Write("操 作 页 面：" + request.ServerVariables["URL"] + "<br>");
                     HttpContext.Current.Response.Write("操 作 I P ：" + getip + "<br>");
                     HttpContext.Current.Response.Write("操 作 时 间：" + DateTime.Now.ToString() + "<br>");
-                    HttpContext.Current.Response.Write("操 作 页 面：" + request.ServerVariables["URL"] + "<br>");
-                    HttpContext.Current.Response.Write("提 交 方 式：" + optionType + "<br>");
-                    HttpContext.Current.Response.Write("提 交 参 数：" + key + "<br>");
+                    value = value.Replace(keyword, "<span style='color:#f60'>" + keyword + "</span>");
                     HttpContext.Current.Response.Write("提 交 数 据：" + value + "<br>");
                     HttpContext.Current.Response.End();
                     #endregion  
@@ -193,6 +195,6 @@ namespace SQLInjection
             query,
             cookie            
         }
-
+         
     }
 }
