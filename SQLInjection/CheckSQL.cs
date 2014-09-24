@@ -16,7 +16,7 @@ namespace SQLInjection
             HttpContext context = application.Context;
             HttpRequest request = context.Request;
 
-            string sqlkeywords = "select↓insert↓update↓delete↓drop↓create↓truncate↓join↓declare↓exists↓union↓order↓exec↓execute↓alter↓mid↓xp_cmdshell↓char↓sp_oacreate↓wscript.shell↓xp_regwrite";
+            string sqlkeywords = "select↓insert↓update↓delete↓drop↓create↓truncate↓join↓declare↓exists↓union↓order↓exec↓execute↓alter↓mid↓xp_cmdshell↓char↓sp_oacreate↓wscript.shell↓xp_regwrite↓waitfor↓delay";
            
             string file = "";
 

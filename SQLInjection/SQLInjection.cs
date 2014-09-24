@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Web;
 using System.Configuration;
+using System.Reflection;
 
 namespace SQLInjection
 {
@@ -43,6 +44,7 @@ namespace SQLInjection
 
                 if (param.SQLInjectionEnable)
                 { 
+                    CheckSQLReg.Check(application, param);
                     CheckSQL.Check(application,param);
                 }
             }
@@ -63,6 +65,7 @@ namespace SQLInjection
         { 
             
         }
+         
 
 
     } 
